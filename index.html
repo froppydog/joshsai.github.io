@@ -1,3 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Josh's AI</title>
+<style>
+  body { font-family: sans-serif; background: #f3f6fa; color: #111; margin:0; display:flex; flex-direction:column; height:100vh;}
+  #chat { padding: 16px; height: 70vh; overflow-y: auto; border-bottom: 1px solid #ccc; flex-grow:1; }
+  .message { max-width: 70%; padding: 10px 14px; margin-bottom: 12px; border-radius: 12px; word-wrap: break-word;}
+  .you { background: #dce4ff; margin-left: auto; }
+  .ai { background: #fff; margin-right: auto; }
+  #input-area { display: flex; padding: 12px; gap: 8px; }
+  #msg { flex:1; padding: 10px; border-radius: 10px; border: 1px solid #aaa; }
+  #send { padding: 10px 14px; border-radius: 10px; border: none; background: #3a71ff; color:white; cursor:pointer; }
+  .typing { font-style: italic; opacity:0.7; }
+</style>
+</head>
+<body>
+
+<div id="chat"></div>
+<div id="input-area">
+  <input id="msg" placeholder="Ask Josh's AI anything...">
+  <button id="send">Send</button>
+</div>
+
 <script>
 // ======================================================
 //        JOSH’S AI — Using Hugging Face Free API
@@ -22,7 +48,6 @@ let chatHistory = JSON.parse(localStorage.getItem("ai_chat") || "[]");
 
 // ======================================================
 // VOICE SYSTEM (Male voice)
-// ======================================================
 let maleVoice = null;
 
 function loadVoice() {
@@ -44,7 +69,6 @@ function speak(text) {
 
 // ======================================================
 // MEMORY HANDLING
-// ======================================================
 function saveMemory() {
   localStorage.setItem("ai_memory", JSON.stringify(memory));
 }
@@ -66,7 +90,6 @@ function updateMemory(userMsg) {
 
 // ======================================================
 // OFFLINE MINI-GPT (fallback)
-// ======================================================
 function miniGPT(prompt) {
   if (prompt.includes("why")) return "Because there's a logical reason behind it.";
   if (prompt.includes("how")) return "Let me break it down in a simple way.";
@@ -76,7 +99,6 @@ function miniGPT(prompt) {
 
 // ======================================================
 // HUGGING FACE FREE AI REQUEST
-// ======================================================
 async function hfAI(userMsg) {
   try {
     const res = await fetch(`https://api-inference.huggingface.co/models/${HF_MODEL}`, {
@@ -94,7 +116,6 @@ async function hfAI(userMsg) {
 
 // ======================================================
 // MAIN BRAIN
-// ======================================================
 async function smartAI(userMsg) {
   const msg = userMsg.toLowerCase();
 
@@ -118,7 +139,6 @@ async function smartAI(userMsg) {
 
 // ======================================================
 // CHAT UI
-// ======================================================
 const chat = document.getElementById("chat");
 const msg = document.getElementById("msg");
 
@@ -150,6 +170,7 @@ async function runAI() {
   typing.className = "message ai typing";
   typing.textContent = "Josh's AI is thinking...";
   chat.appendChild(typing);
+  chat.scrollTop = chat.scrollHeight;
 
   const reply = await smartAI(text);
 
@@ -158,3 +179,6 @@ async function runAI() {
   speak(reply);
 }
 </script>
+
+</body>
+</html>
