@@ -3,193 +3,214 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NeuraMind AI</title>
+<title>NeuraMind Ai</title>
+
 <style>
-  /* =========================
-        GENERAL STYLES
-  ========================= */
-  body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #111; margin:0; display:flex; flex-direction:column; height:100vh;}
-  header { display:flex; align-items:center; padding:12px 20px; background:#3a71ff; color:white; }
-  header img { width:40px; height:40px; margin-right:12px; }
-  header h1 { font-size:1.3rem; margin:0; }
+  body { margin:0; font-family: "Inter", sans-serif; background:#0d0d0f; color:white; height:100vh; display:flex; flex-direction:column; }
 
-  #login-screen, #about-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; gap:12px; }
-  #login-screen input { padding:10px; border-radius:8px; border:1px solid #ccc; width:200px; }
-  #login-screen button { padding:10px 16px; border:none; border-radius:8px; background:#3a71ff; color:white; cursor:pointer; }
+  header { display:flex; align-items:center; padding:14px 20px; background:#111; border-bottom:1px solid #222; }
+  header img { width:42px; margin-right:12px; }
+  header h1 { font-size:1.3rem; font-weight:600; }
 
-  #chat-container { display:flex; flex-direction:column; height:100vh; }
-  #chat { padding:16px; height:70vh; overflow-y:auto; border-bottom:1px solid #ccc; flex-grow:1; }
-  .message { max-width:70%; padding:10px 14px; margin-bottom:12px; border-radius:12px; word-wrap:break-word; }
-  .you { background:#dce4ff; margin-left:auto; }
-  .ai { background:#fff; margin-right:auto; }
-  .typing { font-style:italic; opacity:0.7; }
+  /* Login */
+  #login-screen { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; }
+  #login-screen input { padding:12px; width:240px; border:1px solid #333; border-radius:8px; background:#1a1a1d; color:white; }
+  #login-screen button { padding:12px 18px; background:#4e6eff; color:white; border:none; border-radius:8px; cursor:pointer; }
 
-  #input-area { display:flex; padding:12px; gap:8px; background:white; }
-  #msg { flex:1; padding:10px; border-radius:10px; border:1px solid #aaa; }
-  #send { padding:10px 14px; border-radius:10px; border:none; background:#3a71ff; color:white; cursor:pointer; }
-  #about { padding:16px; font-size:0.95rem; background:#eef2ff; margin:12px; border-radius:8px; }
+  /* Chat */
+  #chat-container { display:none; flex-direction:column; height:100vh; }
+  #chat { flex:1; padding:20px; overflow-y:auto; }
 
+  .message { max-width:80%; padding:14px; margin-bottom:14px; border-radius:10px; line-height:1.45; }
+  .you { background:#263165; margin-left:auto; }
+  .ai { background:#1b1b1f; border:1px solid #333; }
+
+  #input-area { display:flex; padding:14px; background:#111; border-top:1px solid #222; }
+  #msg { flex:1; padding:12px; border-radius:8px; border:1px solid #333; background:#1a1a1d; color:white; }
+  #send { padding:12px 18px; background:#4e6eff; color:white; border:none; border-radius:8px; cursor:pointer; }
+
+  #about { padding:14px; background:#141418; border-top:1px solid #222; color:#aaa; }
+
+  /* Typing cursor */
+  .cursor {
+    display:inline-block;
+    width:6px;
+    height:18px;
+    background:white;
+    margin-left:4px;
+    animation: blink 0.7s infinite;
+  }
+  @keyframes blink {
+    0% { opacity:1; }
+    50% { opacity:0; }
+    100% { opacity:1; }
+  }
 </style>
 </head>
+
 <body>
 
 <header>
-  <!-- Logo SVG -->
-  <svg width="40" height="40" viewBox="0 0 100 100" fill="white" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="45" stroke="white" stroke-width="5" fill="#3a71ff"/>
-    <path d="M50 20 L65 80 L50 65 L35 80 Z" fill="white"/>
+  <svg width="40" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="45" stroke="#4e6eff" stroke-width="7" fill="none"/>
+    <path d="M50 20 L70 80 L50 62 L30 80 Z" fill="#4e6eff"/>
   </svg>
-  <h1>NeuraMind AI</h1>
+  <h1>NeuraMind Ultra</h1>
 </header>
 
-<!-- LOGIN SCREEN -->
+<!-- Login -->
 <div id="login-screen">
-  <h2>Welcome to NeuraMind AI</h2>
-  <input type="text" id="username" placeholder="Enter your name">
-  <button id="login-btn">Start Chat</button>
+  <h2>Welcome to NeuraMind Ai</h2>
+  <input id="username" placeholder="Enter your name">
+  <button id="login-btn">Start</button>
 </div>
 
-<!-- CHAT INTERFACE -->
-<div id="chat-container" style="display:none;">
+<!-- Chat UI -->
+<div id="chat-container">
   <div id="chat"></div>
+
   <div id="input-area">
-    <input id="msg" placeholder="Ask NeuraMind AI anything...">
+    <input id="msg" placeholder="Ask something...">
     <button id="send">Send</button>
   </div>
-  <div id="about">
-    <strong>About NeuraMind AI:</strong> This offline smart AI remembers your preferences, learns your likes, and responds intelligently. All data is stored locally. Built for personal assistant tasks and fun conversations!
-  </div>
+
+  <div id="about">NeuraMind Ai — Offline GPT-style AI with deep reasoning, instant knowledge responses, typing animation, and memory.</div>
 </div>
 
 <script>
-// ======================================================
-//        NEURAMIND AI — Fully Offline
-// ======================================================
+/* =====================================================
+       NeuraMind Ultra — Smart Offline Brain
+===================================================== */
 
-const AI_SETTINGS = {
-  name: "NeuraMind AI",
-  personality: "calm, intelligent, friendly deep-voiced assistant",
-  memoryEnabled: true,
-  historyLimit: 50
+let name = "";  // username memory only
+
+/* SMART OFFLINE KNOWLEDGE PACK */
+const KNOWLEDGE = {
+  "earth": "Earth is the third planet from the Sun, the only known world with life, water, and an oxygen-rich atmosphere.",
+  "sun": "The Sun is a massive ball of hot plasma that provides energy to Earth through light and heat.",
+  "ai": "Artificial Intelligence is the simulation of human intelligence in machines that can reason, learn, and adapt.",
+  "wifi": "Wi-Fi uses radio waves to send data between your device and a router.",
+  "cpu": "A CPU (Central Processing Unit) processes instructions and performs calculations inside a computer.",
+  "moon": "The Moon is Earth's natural satellite and affects tides on Earth.",
+  "water": "Water is a molecule made of two hydrogen atoms and one oxygen atom (H₂O).",
+  "oxygen": "Oxygen is a gas essential for human breathing and combustion.",
+  "gravity": "Gravity is a force that pulls objects toward each other, discovered by Isaac Newton.",
+  "internet": "The Internet is a global network connecting millions of computers for communication and data exchange."
 };
 
-let memory = JSON.parse(localStorage.getItem("ai_memory") || "{}");
-let chatHistory = JSON.parse(localStorage.getItem("ai_chat") || []);
-let maleVoice = null;
+/* DEEP SMART LOGIC ENGINE (offline GPT simulation) */
+function UltraBrain(input) {
+  const q = input.toLowerCase();
 
-// Load voice
-function loadVoice() {
-  const voices = speechSynthesis.getVoices();
-  maleVoice = voices.find(v => /Male|David|Daniel|Alex|Google UK English Male/i.test(v.name)) || voices[0];
-}
-speechSynthesis.onvoiceschanged = loadVoice;
-function speak(text) {
-  const u = new SpeechSynthesisUtterance(text);
-  u.voice = maleVoice;
-  u.pitch = 0.75;
-  u.rate = 1;
-  speechSynthesis.speak(u);
-}
+  /* --- If username exists, personalize --- */
+  let intro = name ? `Alright ${name}, ` : "";
 
-function saveMemory() { localStorage.setItem("ai_memory", JSON.stringify(memory)); }
-function updateMemory(userMsg) {
-  const m = userMsg.toLowerCase();
-  if (m.includes("my name is")) { memory.username = userMsg.split("my name is")[1].trim(); saveMemory(); }
-  if (m.includes("i like")) { memory.likes = memory.likes || []; memory.likes.push(userMsg.split("i like")[1].trim()); saveMemory(); }
-}
+  /* --- If question matches knowledge pack --- */
+  for (const key in KNOWLEDGE) {
+    if (q.includes(key)) {
+      return intro + KNOWLEDGE[key];
+    }
+  }
 
-function smartOfflineAI(userMsg) {
-  userMsg = userMsg.trim();
-  const lower = userMsg.toLowerCase();
-  let response = "";
+  /* --- Math solving --- */
+  try {
+    if (/[0-9\+\-\*\/\(\)]/.test(q)) {
+      let result = eval(q);
+      if (!isNaN(result)) return intro + "The answer is: " + result;
+    }
+  } catch(e){}
 
-  if (memory.username) response += `Hey ${memory.username}, `;
-  if (memory.likes && memory.likes.length > 0) response += `I remember you like ${memory.likes.join(", ")}. `;
+  /* --- Question patterns --- */
+  if (q.startsWith("what is"))
+    return intro + "You’re asking what something is. Here’s the basic idea: " +
+           input.replace(/what is/i,"").trim() + " can be explained further if you want.";
 
-  const recent = chatHistory.slice(-5).map(m => m.text).join(" ");
+  if (q.startsWith("who is"))
+    return intro + "That refers to a person or identity. Tell me more and I’ll break it down.";
 
-  if (lower.includes("why")) return response + "Here's why: " + (recent || "It makes sense logically.");
-  if (lower.includes("how")) return response + "Let's break it down: " + (recent || "Step by step, here's what I think.");
-  if (lower.includes("what")) return response + "Here's what I understand: " + (recent || "Let me explain.");
-  if (lower.includes("who")) return response + "Depends on the context. " + (recent || "Could you clarify?");
-  if (lower.includes("when")) return response + "Timing varies. " + (recent || "It depends on circumstances.");
-  if (lower.includes("help") || lower.includes("problem")) return response + "I’m here to help. " + (recent || "Let's work on it together.");
+  if (q.includes("why"))
+    return intro + "Let me explain the reasoning behind that: " + input;
 
-  return response + "Interesting! " + (recent ? "Earlier you said: " + recent : "Tell me more so I can understand.");
+  if (q.includes("how"))
+    return intro + "Here’s how it works: " + input;
+
+  /* --- Smart fallback (GPT-style general answer) --- */
+  return intro + 
+    "Here’s what I understand: You're asking about \"" + input + "\". " +
+    "Based on the context, it sounds like a topic you want explained. " +
+    "Give me a bit more detail and I’ll refine my answer.";
 }
 
-function smartAI(userMsg) {
-  updateMemory(userMsg);
-  return smartOfflineAI(userMsg);
+/* =====================================================
+                 TYPING EFFECT FUNCTION
+===================================================== */
+
+function typeMessage(element, text, speed = 22) {
+  let i = 0;
+
+  function type() {
+    if (i < text.length) {
+      element.textContent += text.charAt(i);
+      i++;
+      setTimeout(type, speed);
+    }
+  }
+
+  type();
 }
 
-// ======================================================
-// CHAT UI
-// ======================================================
+/* =====================================================
+                     UI + CHAT
+===================================================== */
 
 const chat = document.getElementById("chat");
 const msg = document.getElementById("msg");
 
-// Add message
-function addMessage(text, who) {
-  const div = document.createElement("div");
-  div.className = `message ${who}`;
-  div.textContent = text;
+function addUserMessage(t) {
+  let div = document.createElement("div");
+  div.className = "message you";
+  div.textContent = t;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
-
-  chatHistory.push({role: who, text});
-  localStorage.setItem("ai_chat", JSON.stringify(chatHistory));
 }
 
-// Replay history
-chatHistory.forEach(m => addMessage(m.text, m.role));
+function addAIMessage(t) {
+  let div = document.createElement("div");
+  div.className = "message ai";
+  chat.appendChild(div);
+  typeMessage(div, t); // typing animation
+  chat.scrollTop = chat.scrollHeight;
+}
 
-// Run AI
 function runAI() {
-  const text = msg.value.trim();
+  let text = msg.value.trim();
   if (!text) return;
-
-  addMessage(text, "you");
   msg.value = "";
 
-  const typing = document.createElement("div");
-  typing.className = "message ai typing";
-  typing.textContent = "NeuraMind AI is thinking...";
-  chat.appendChild(typing);
-  chat.scrollTop = chat.scrollHeight;
+  addUserMessage(text);
 
   setTimeout(() => {
-    const reply = smartAI(text);
-    typing.remove();
-    addMessage(reply, "ai");
-    speak(reply);
-  }, 500);
+    let reply = UltraBrain(text);
+    addAIMessage(reply);
+  }, 300);
 }
 
-// Event listeners
-document.getElementById("send").onclick = runAI;
+/* Buttons */
+send.onclick = runAI;
 msg.onkeydown = e => { if (e.key === "Enter") runAI(); };
 
-// ======================================================
-// LOGIN LOGIC
-// ======================================================
-const loginScreen = document.getElementById("login-screen");
-const chatContainer = document.getElementById("chat-container");
-const loginBtn = document.getElementById("login-btn");
-const usernameInput = document.getElementById("username");
+/* =====================================================
+                       LOGIN
+===================================================== */
+document.getElementById("login-btn").onclick = () => {
+  name = document.getElementById("username").value.trim();
+  if (!name) return alert("Bru enter your name");
 
-loginBtn.onclick = () => {
-  const name = usernameInput.value.trim();
-  if (!name) return alert("Please enter your name!");
-  memory.username = name;
-  saveMemory();
-  loginScreen.style.display = "none";
-  chatContainer.style.display = "flex";
-  addMessage(`Hello ${name}, I'm NeuraMind AI. Ask me anything!`, "ai");
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("chat-container").style.display = "flex";
+
+  addAIMessage(`Welcome ${name}. I'm NeuraMind Ultra. Ask me anything.`);
 };
-
 </script>
-
 </body>
 </html>
