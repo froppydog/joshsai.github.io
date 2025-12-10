@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Josh's Ai</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  --bg: #f3f6fa;
+  --text: #111;
+  --bubble-ai: #ffffff;
+  --bubble-you: #dce4ff;
+  transition: .3s;
+}
+
+body.dark {
+  --bg: #0f1114;
+  --text: #f5f5f5;
+  --bubble-ai: #1c1f24;
+  --bubble-you: #2e3b5a;
+}
+
+header {
+  background: #3a71ff;
+  padding: 16px;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  color: white;
+}
+
+#toggleDark {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #ffffff33;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+#chat {
+  padding: 16px;
+  height: 70vh;
+  overflow-y: auto;
+}
+
+.message {
+  max-width: 70%;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+}
+
+.you {
+  background: var(--bubble-you);
+  margin-left: auto;
+}
+
+.ai {
+  background: var(--bubble-ai);
+  margin-right: auto;
+}
+
+.typing {
+  opacity: .7;
+  font-style: italic;
+}
+
+#input-area {
+  padding: 12px;
+  background: #fff2;
+  display: flex;
+  gap: 8px;
+}
+
+#msg {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #aaa;
+}
+
+#send, #mic {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+#send {
+  background: #3a71ff;
+  color: white;
+}
+
+#mic {
+  background: #ffd13a;
+}
+</style>
+</head>
+
+<body>
+
+<header>Josh's AI (Offline)
+  <button id="toggleDark">Dark</button>
+</header>
+
+<div id="chat"></div>
+
+<div id="input-area">
+  <input id="msg" placeholder="Ask Josh's AI anything...">
+  <button id="mic">🎤</button>
+  <button id="send">Send</button>
+</div>
+
+<script>
+// --------------------------
+// Voice Input (Speech to Text)
+// --------------------------
+let recognition;
+try {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+} catch { recognition = null; }
+
+document.getElementById("mic").onclick = () => {
+  if (!recognition) {
+    alert("Voice input not supported on this device.");
+    return;
+  }
+  recognition.start();
+};
+
+if (recognition) {
+  recognition.onresult = (e) => {
+    document.getElementById("msg").value = e.results[0][0].transcript;
+  };
+}
+
+// --------------------------
+// Utility
+// --------------------------
+const chat = document.getElementById("chat");
+const msg = document.getElementById("msg");
+
+function addMessage(text, who) {
+  const div = document.createElement("div");
+  div.className = `message ${who}`;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function speak(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 1;
+  speechSynthesis.speak(utter);
+}
+
+// --------------------------
+// Offline Mini AI Logic
+// --------------------------
+function mathSolve(q) {
+  try {
+    const safe = q.replace(/[^0-9+\-*/().^ ]/g, "").replace(/\^/g, "**");
+    const result = Function("return " + safe)();
+    return "The answer is: " + result;
+  } catch {
+    return "I couldn't solve that expression. Try something simpler.";
+  }
+}
+
+function englishHelp(q) {
+  if (/define/i.test(q)) {
+    const w = q.replace(/define/i, "").trim();
+    return `Definition of ${w}:  
+A simple explanation is not available offline, but I can help describe it if you give more context.`;
+  }
+
+  if (/synonym/i.test(q)) {
+    const w = q.replace(/synonym/i, "").trim();
+    return `Some simple synonyms for "${w}" might be common words similar in meaning. Try giving a specific sentence!`;
+  }
+
+  if (/paraphrase/i.test(q)) {
+    const text = q.replace(/paraphrase/i, "").trim();
+    return "Here’s a simpler version:\n" + text.replace(/important/gi, "significant").replace(/big/gi, "large");
+  }
+
+  return "I can help with definitions, paraphrasing, grammar tips, and explaining concepts. Try: 'Define metaphor' or 'Paraphrase this: ...'";
+}
+
+function studyTips() {
+  return "Here are study tips:\n1) Break work into small chunks.\n2) Teach the topic to someone else.\n3) Quiz yourself.\n4) Take short breaks.";
+}
+
+function offlineAI(q) {
+  q = q.toLowerCase();
+
+  if (/[0-9+\-*/()^]/.test(q)) return mathSolve(q);
+  if (/define|synonym|paraphrase|grammar|english/.test(q)) return englishHelp(q);
+  if (/study|tips|school/.test(q)) return studyTips();
+
+  return "I'm Josh's offline AI — I can help you with math, English, and study advice! Try asking me something.";
+}
+
+// --------------------------
+// Chat Handling
+// --------------------------
+document.getElementById("send").onclick = runAI;
+msg.onkeydown = (e) => { if (e.key === "Enter") runAI(); };
+
+function runAI() {
+  const text = msg.value.trim();
+  if (!text) return;
+
+  addMessage(text, "you");
+  msg.value = "";
+
+  const typing = document.createElement("div");
+  typing.className = "message ai typing";
+  typing.textContent = "Josh's AI is typing...";
+  chat.appendChild(typing);
+
+  setTimeout(() => {
+    typing.remove();
+    const reply = offlineAI(text);
+    addMessage(reply, "ai");
+    speak(reply);
+  }, 600);
+}
+
+// --------------------------
+// Dark Mode
+// --------------------------
+document.getElementById("toggleDark").onclick = () => {
+  document.body.classList.toggle("dark");
+};
+</script>
+
+</body>
+</html>
