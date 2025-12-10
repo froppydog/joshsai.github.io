@@ -26,22 +26,13 @@
 
 <script>
 // ======================================================
-//        JOSH’S AI — Groq API + Smart Offline
+//        JOSH’S AI — Groq API Only
 // ======================================================
 
 const GROQ_API_KEY = "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";
 const GROQ_MODEL = "llama3-8b-8192";
 
-// Personality & Settings
-const AI_SETTINGS = {
-  name: "Josh's AI",
-  personality: "calm, intelligent, friendly deep-voiced male",
-  memoryEnabled: true,
-  historyLimit: 50
-};
-
-// Memory + Chat History
-let memory = JSON.parse(localStorage.getItem("ai_memory") || "{}");
+// Chat history (for context)
 let chatHistory = JSON.parse(localStorage.getItem("ai_chat") || []);
 
 // Voice Setup
@@ -57,36 +48,6 @@ function speak(text) {
   u.pitch = 0.75;
   u.rate = 1;
   speechSynthesis.speak(u);
-}
-
-// Save Memory
-function saveMemory() { localStorage.setItem("ai_memory", JSON.stringify(memory)); }
-function updateMemory(userMsg) {
-  const m = userMsg.toLowerCase();
-  if (m.includes("my name is")) { memory.username = userMsg.split("my name is")[1].trim(); saveMemory(); }
-  if (m.includes("i like")) { memory.likes = memory.likes || []; memory.likes.push(userMsg.split("i like")[1].trim()); saveMemory(); }
-}
-
-// ======================================================
-// SMART OFFLINE AI — fallback if API fails
-function smartOfflineAI(userMsg) {
-  userMsg = userMsg.trim();
-  const lower = userMsg.toLowerCase();
-  let response = "";
-  
-  if (memory.username) response += `Hey ${memory.username}, `;
-  if (memory.likes && memory.likes.length > 0) response += `I remember you like ${memory.likes.join(", ")}. `;
-
-  const recent = chatHistory.slice(-5).map(m => m.text).join(" ");
-
-  if (lower.includes("why")) return response + "Based on what we know, here's why: " + (recent || "It’s a logical explanation.");
-  if (lower.includes("how")) return response + "Let's break it down step by step: " + (recent || "I’ll explain it clearly.");
-  if (lower.includes("what")) return response + "Here’s what I understand: " + (recent || "Let me summarize it.");
-  if (lower.includes("who")) return response + "That depends on context. " + (recent || "Could you clarify who you mean?");
-  if (lower.includes("when")) return response + "Timing varies, but generally: " + (recent || "It happens under certain conditions.");
-  if (lower.includes("help") || lower.includes("problem")) return response + "I’m here to help. " + (recent || "Let's solve it together.");
-  
-  return response + "Hmm, that's interesting! " + (recent ? "Earlier you mentioned: " + recent : "Tell me more so I can give a better answer.");
 }
 
 // ======================================================
@@ -106,32 +67,20 @@ async function groqAI(userMsg) {
       })
     });
     const data = await res.json();
-    return data.choices?.[0]?.message?.content || null;
-  } catch {
-    return null;
+    return data.choices?.[0]?.message?.content || "I got no response from the API.";
+  } catch (err) {
+    console.error(err);
+    return "API request failed. Check your key or connection.";
   }
 }
 
 function buildChatHistory(userMsg) {
-  const messages = chatHistory.slice(-AI_SETTINGS.historyLimit).map(m => ({
+  const messages = chatHistory.slice(-20).map(m => ({
     role: m.role === "you" ? "user" : "assistant",
     content: m.text
   }));
   messages.push({ role: "user", content: userMsg });
   return messages;
-}
-
-// ======================================================
-// MAIN AI FUNCTION
-async function smartAI(userMsg) {
-  const msg = userMsg.toLowerCase();
-  if (msg.startsWith("/clear")) { localStorage.setItem("ai_chat", JSON.stringify([])); chatHistory = []; return "Chat cleared! Ready to start fresh."; }
-  updateMemory(userMsg);
-
-  const online = await groqAI(userMsg);
-  if (online) return online;
-
-  return smartOfflineAI(msg);
 }
 
 // ======================================================
@@ -169,7 +118,7 @@ async function runAI() {
   chat.appendChild(typing);
   chat.scrollTop = chat.scrollHeight;
 
-  const reply = await smartAI(text);
+  const reply = await groqAI(text);
 
   typing.remove();
   addMessage(reply, "ai");
