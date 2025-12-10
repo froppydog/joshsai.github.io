@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Josh's AI</title>
+<title>Josh's Ai</title>
 <style>
   body { font-family: sans-serif; background: #f3f6fa; color: #111; margin:0; display:flex; flex-direction:column; height:100vh;}
   #chat { padding: 16px; height: 70vh; overflow-y: auto; border-bottom: 1px solid #ccc; flex-grow:1; }
@@ -26,15 +26,14 @@
 
 <script>
 // ======================================================
-//        JOSH’S AI — Using Hugging Face Free API
+//        JOSH’S AI — With Groq LLaMA 3.1 Support
 // ======================================================
 
-// API Model (anonymous/public GPT-2)
-const HF_MODEL = "gpt2";  // smaller free model, no key needed
+const GROQ_API_KEY = "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";
+const GROQ_MODEL = "llama3-8b-8192";
 
 // ======================================================
 // PERSONALITY SETTINGS
-// ======================================================
 const AI_SETTINGS = {
   name: "Josh's AI",
   personality: "calm, intelligent, friendly deep-voiced male",
@@ -42,23 +41,19 @@ const AI_SETTINGS = {
   historyLimit: 20
 };
 
-// Load memory + history
+// ======================================================
+// MEMORY + CHAT HISTORY
 let memory = JSON.parse(localStorage.getItem("ai_memory") || "{}");
 let chatHistory = JSON.parse(localStorage.getItem("ai_chat") || "[]");
 
 // ======================================================
-// VOICE SYSTEM (Male voice)
+// VOICE SYSTEM
 let maleVoice = null;
-
 function loadVoice() {
   const voices = speechSynthesis.getVoices();
-  maleVoice =
-    voices.find(v => /Male|David|Daniel|Alex|Google UK English Male/i.test(v.name)) ||
-    voices[0];
+  maleVoice = voices.find(v => /Male|David|Daniel|Alex|Google UK English Male/i.test(v.name)) || voices[0];
 }
-
 speechSynthesis.onvoiceschanged = loadVoice;
-
 function speak(text) {
   const u = new SpeechSynthesisUtterance(text);
   u.voice = maleVoice;
@@ -69,27 +64,15 @@ function speak(text) {
 
 // ======================================================
 // MEMORY HANDLING
-function saveMemory() {
-  localStorage.setItem("ai_memory", JSON.stringify(memory));
-}
-
+function saveMemory() { localStorage.setItem("ai_memory", JSON.stringify(memory)); }
 function updateMemory(userMsg) {
   const m = userMsg.toLowerCase();
-
-  if (m.includes("my name is")) {
-    memory.username = userMsg.split("my name is")[1].trim();
-    saveMemory();
-  }
-
-  if (m.includes("i like")) {
-    memory.likes = memory.likes || [];
-    memory.likes.push(userMsg.split("i like")[1].trim());
-    saveMemory();
-  }
+  if (m.includes("my name is")) { memory.username = userMsg.split("my name is")[1].trim(); saveMemory(); }
+  if (m.includes("i like")) { memory.likes = memory.likes || []; memory.likes.push(userMsg.split("i like")[1].trim()); saveMemory(); }
 }
 
 // ======================================================
-// OFFLINE MINI-GPT (fallback)
+// OFFLINE FALLBACK
 function miniGPT(prompt) {
   if (prompt.includes("why")) return "Because there's a logical reason behind it.";
   if (prompt.includes("how")) return "Let me break it down in a simple way.";
@@ -98,20 +81,33 @@ function miniGPT(prompt) {
 }
 
 // ======================================================
-// HUGGING FACE FREE AI REQUEST
-async function hfAI(userMsg) {
+// GROQ API CALL
+async function groqAI(userMsg) {
   try {
-    const res = await fetch(`https://api-inference.huggingface.co/models/${HF_MODEL}`, {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ inputs: userMsg })
+      headers: {
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages: buildChatHistory(userMsg),
+        temperature: 0.8
+      })
     });
     const data = await res.json();
-    if (data.error) return null;
-    return data[0]?.generated_text || null;
-  } catch {
-    return null;
-  }
+    return data.choices?.[0]?.message?.content || null;
+  } catch { return null; }
+}
+
+function buildChatHistory(userMsg) {
+  const messages = chatHistory.slice(-AI_SETTINGS.historyLimit).map(m => ({
+    role: m.role === "you" ? "user" : "assistant",
+    content: m.text
+  }));
+  messages.push({ role: "user", content: userMsg });
+  return messages;
 }
 
 // ======================================================
@@ -119,21 +115,12 @@ async function hfAI(userMsg) {
 async function smartAI(userMsg) {
   const msg = userMsg.toLowerCase();
 
-  // Command: /clear
-  if (msg.startsWith("/clear")) {
-    localStorage.setItem("ai_chat", JSON.stringify([]));
-    chatHistory = [];
-    return "Chat cleared! Ready to start fresh.";
-  }
-
-  // Update memory
+  if (msg.startsWith("/clear")) { localStorage.setItem("ai_chat", JSON.stringify([])); chatHistory = []; return "Chat cleared! Ready to start fresh."; }
   updateMemory(userMsg);
 
-  // Try Hugging Face AI first
-  const online = await hfAI(userMsg);
+  const online = await groqAI(userMsg);
   if (online) return online;
 
-  // Offline fallback
   return miniGPT(msg);
 }
 
