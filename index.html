@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Zyra Games Launcher</title>
-
   <style>
     body {
       margin: 0;
@@ -27,51 +26,19 @@
       background: linear-gradient(135deg, #7b3fe4, #000);
       box-shadow: 0 0 18px #7b3fe4;
     }
-
-    button:hover {
-      transform: scale(1.08);
-      box-shadow: 0 0 28px #b48cff;
-    }
   </style>
 </head>
 <body>
 
-<button onclick="openEmbedded()">OPEN</button>
+<button onclick="openEmbed()">OPEN</button>
 
 <script>
-  function openEmbedded() {
-    const siteURL = "https://zyragames-jj.github.io/joshsai.github.io/";
+  function openEmbed() {
     const tab = window.open("about:blank", "_blank");
-
-    tab.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Zyra Games</title>
-        <style>
-          html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-          }
-          iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-          }
-        </style>
-      </head>
-      <body>
-        <iframe src="${siteURL}"></iframe>
-      </body>
-      </html>
-    `);
-
-    tab.document.close();
+    tab.location.href = "embed.html";
   }
 </script>
 
 </body>
 </html>
+
